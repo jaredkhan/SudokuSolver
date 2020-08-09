@@ -9,88 +9,88 @@ let examples = [
 
 final class sudokuTests: XCTestCase {
   func testParse() {
-    let allValues = Set(SudokuLib.CellValue.allCases)
-    let unconstrainedCell = SudokuLib.Cell(possibleValues: allValues)
+    let allValues = Set(SudokuLib.Grid.Cell.Value.allCases)
+    let unconstrainedCell = SudokuLib.Grid.Cell(possibleValues: allValues)
     let expectedGrid = SudokuLib.Grid(cells: [
-      SudokuLib.Cell(possibleValues: [.five]),
+      SudokuLib.Grid.Cell(possibleValues: [.five]),
       unconstrainedCell,
       unconstrainedCell,
-      SudokuLib.Cell(possibleValues: [.two]),
-      unconstrainedCell,
-      unconstrainedCell,
-      unconstrainedCell,
-      SudokuLib.Cell(possibleValues: [.four]),
+      SudokuLib.Grid.Cell(possibleValues: [.two]),
       unconstrainedCell,
       unconstrainedCell,
       unconstrainedCell,
-      unconstrainedCell,
-      SudokuLib.Cell(possibleValues: [.six]),
-      unconstrainedCell,
-      SudokuLib.Cell(possibleValues: [.three]),
+      SudokuLib.Grid.Cell(possibleValues: [.four]),
       unconstrainedCell,
       unconstrainedCell,
       unconstrainedCell,
       unconstrainedCell,
-      SudokuLib.Cell(possibleValues: [.three]),
+      SudokuLib.Grid.Cell(possibleValues: [.six]),
       unconstrainedCell,
-      unconstrainedCell,
-      unconstrainedCell,
-      SudokuLib.Cell(possibleValues: [.nine]),
-      unconstrainedCell,
-      unconstrainedCell,
-      SudokuLib.Cell(possibleValues: [.seven]),
-      unconstrainedCell,
-      unconstrainedCell,
-      SudokuLib.Cell(possibleValues: [.three]),
-      unconstrainedCell,
-      unconstrainedCell,
-      SudokuLib.Cell(possibleValues: [.seven]),
+      SudokuLib.Grid.Cell(possibleValues: [.three]),
       unconstrainedCell,
       unconstrainedCell,
       unconstrainedCell,
       unconstrainedCell,
-      unconstrainedCell,
-      SudokuLib.Cell(possibleValues: [.seven]),
-      unconstrainedCell,
-      unconstrainedCell,
-      SudokuLib.Cell(possibleValues: [.eight]),
+      SudokuLib.Grid.Cell(possibleValues: [.three]),
       unconstrainedCell,
       unconstrainedCell,
       unconstrainedCell,
-      SudokuLib.Cell(possibleValues: [.six]),
+      SudokuLib.Grid.Cell(possibleValues: [.nine]),
+      unconstrainedCell,
+      unconstrainedCell,
+      SudokuLib.Grid.Cell(possibleValues: [.seven]),
+      unconstrainedCell,
+      unconstrainedCell,
+      SudokuLib.Grid.Cell(possibleValues: [.three]),
+      unconstrainedCell,
+      unconstrainedCell,
+      SudokuLib.Grid.Cell(possibleValues: [.seven]),
       unconstrainedCell,
       unconstrainedCell,
       unconstrainedCell,
       unconstrainedCell,
       unconstrainedCell,
+      SudokuLib.Grid.Cell(possibleValues: [.seven]),
       unconstrainedCell,
-      SudokuLib.Cell(possibleValues: [.two]),
+      unconstrainedCell,
+      SudokuLib.Grid.Cell(possibleValues: [.eight]),
       unconstrainedCell,
       unconstrainedCell,
-      SudokuLib.Cell(possibleValues: [.eight]),
+      unconstrainedCell,
+      SudokuLib.Grid.Cell(possibleValues: [.six]),
       unconstrainedCell,
       unconstrainedCell,
       unconstrainedCell,
       unconstrainedCell,
       unconstrainedCell,
       unconstrainedCell,
-      SudokuLib.Cell(possibleValues: [.three]),
+      SudokuLib.Grid.Cell(possibleValues: [.two]),
       unconstrainedCell,
       unconstrainedCell,
-      unconstrainedCell,
-      SudokuLib.Cell(possibleValues: [.four]),
-      unconstrainedCell,
-      unconstrainedCell,
-      SudokuLib.Cell(possibleValues: [.six]),
+      SudokuLib.Grid.Cell(possibleValues: [.eight]),
       unconstrainedCell,
       unconstrainedCell,
       unconstrainedCell,
       unconstrainedCell,
       unconstrainedCell,
-      SudokuLib.Cell(possibleValues: [.one]),
+      unconstrainedCell,
+      SudokuLib.Grid.Cell(possibleValues: [.three]),
       unconstrainedCell,
       unconstrainedCell,
-      SudokuLib.Cell(possibleValues: [.five]),
+      unconstrainedCell,
+      SudokuLib.Grid.Cell(possibleValues: [.four]),
+      unconstrainedCell,
+      unconstrainedCell,
+      SudokuLib.Grid.Cell(possibleValues: [.six]),
+      unconstrainedCell,
+      unconstrainedCell,
+      unconstrainedCell,
+      unconstrainedCell,
+      unconstrainedCell,
+      SudokuLib.Grid.Cell(possibleValues: [.one]),
+      unconstrainedCell,
+      unconstrainedCell,
+      SudokuLib.Grid.Cell(possibleValues: [.five]),
       unconstrainedCell,
       unconstrainedCell,
     ])
@@ -111,17 +111,12 @@ final class sudokuTests: XCTestCase {
     )
   }
   
-  func testSolve() {
+  func testSolve() throws {
+    var grid = SudokuLib.Grid.parseFromString(gridString: examples[0])
+    try grid.solve()
     XCTAssertEqual(
-      try? SudokuLib.Grid.parseFromString(gridString: examples[0]).solve(),
+      grid,
       SudokuLib.Grid.parseFromString(gridString: "598271346742653891136849257813527964427968135659314728285796413971435682364182579")
     )
-  }
-}
-
-final class helpersTests: XCTestCase {
-  func testBigUnion() {
-    let result = Set.union(Set([1, 2, 3]), Set([2, 3, 4]), Set([1, 5]))
-    XCTAssertEqual(result, Set([1, 2, 3, 4, 5]))
   }
 }
