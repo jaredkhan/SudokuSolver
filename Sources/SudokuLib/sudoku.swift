@@ -25,16 +25,24 @@ public struct Grid: Equatable {
     // The 81 cells of the grid in left-to-right top-to-bottom order
     var cells: Array<Cell>
 
+    // Indices of cells that have been constrained since the last prune
+    var newlyConstrainedCellIndices: Array<Int>
+
     public static func parseFromString(gridString: String) -> Grid {
         assert(gridString.count == 81)
 
-        return Grid(cells: gridString.enumerated().map { index, char in
+        var cells: Array<Cell> = []
+        var newlyConstrainedCellIndices: Array<Int> = []
+        for (index, char) in gridString.enumerated() {
             if let value = Int(String(char)).flatMap({ Grid.Cell.Value(rawValue: $0) }) {
-                return Cell(possibleValues: [value])
+                cells.append(Cell(possibleValues: [value]))
+                newlyConstrainedCellIndices.append(index)
             } else {
-                return Cell(possibleValues: Set(Grid.Cell.Value.allCases))
+                cells.append(Cell(possibleValues: Set(Grid.Cell.Value.allCases)))
             }
-        })
+        }
+
+        return Grid(cells: cells, newlyConstrainedCellIndices: newlyConstrainedCellIndices)
     }
 
     static func row(of index: Int) -> Int {
@@ -107,27 +115,25 @@ public struct Grid: Equatable {
     }
 
     mutating func prune() throws {
-        // Propogate constraints for naked singles
+        // Propagate constraints for naked singles
 
-        var newlySettledCells = cells.enumerated().filter {
-            $0.element.isSettled
-        }
+        var newlySettledCellIndices = newlyConstrainedCellIndices.filter { cells[$0].isSettled }
 
-        while let newlySettledCell = newlySettledCells.popLast() {
-            let cell = newlySettledCell.element
-            let index = newlySettledCell.offset
+        while let index = newlySettledCellIndices.popLast() {
+            let cell = cells[index]
             let settledValue = cell.possibleValues.first!
             let visibleUnsettledCellIndices = Grid.indicesVisibleFrom(index: index).filter({ !cells[$0].isSettled })
             for visibleIndex in visibleUnsettledCellIndices {
                 cells[visibleIndex].possibleValues.remove(settledValue)
                 if cells[visibleIndex].isSettled {
-                    newlySettledCells.append((visibleIndex, cells[visibleIndex]))
+                    newlySettledCellIndices.append(visibleIndex)
                 }
                 if cells[visibleIndex].possibleValues.count == 0 {
                     throw ConsistencyError()
                 }
             }
         }
+        newlyConstrainedCellIndices = []
     }
 
     mutating public func solve() throws {
@@ -140,6 +146,7 @@ public struct Grid: Equatable {
         for value in cell.possibleValues {
             var possibleGrid = self
             possibleGrid.cells[index].possibleValues = [value]
+            possibleGrid.newlyConstrainedCellIndices.append(index)
             do {
                 try possibleGrid.solve()
                 self = possibleGrid
@@ -183,5 +190,4 @@ public struct Grid: Equatable {
 }
 
 
-// TODO: Only prune in places that have changed since last prune
 // TODO: Define a pruning stage which finds doubles
