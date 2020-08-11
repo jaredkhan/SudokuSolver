@@ -9,7 +9,7 @@ import Foundation
 
 
 extension Set {
-    static func union(_ sets: Set<Element>...) -> Set<Element> {
+    static func union(_ sets: Set<Set<Element>>) -> Set<Element> {
         var result = Set<Element>()
         for set in sets {
             result.formUnion(set)
@@ -17,14 +17,24 @@ extension Set {
         return result
     }
 
-    func subsets(size: Int) -> Set<Self> {
-        guard (0...self.count).contains(size) else {
-            return []
+    static func intersection(_ sets: Set<Set<Element>>) -> Set<Element> {
+        guard let first = sets.first else { fatalError("Cannot take the intersection of an empty set of sets.") }
+        var result = first
+        for set in sets {
+            result.formIntersection(set)
         }
+        return result
+    }
 
-        if size == 0 {
-            return [[]]
-        }
+    func insertingIntoAll<InnerElement>(_ elementToAdd: InnerElement) -> Self where Element == Set<InnerElement> {
+        Self(map { $0.union([elementToAdd]) })
+    }
+
+    func subsets(size: Int) -> Set<Self> {
+        guard (0...count).contains(size) else { return [] }
+
+        if size == 0 { return [[]] }
+        if size == count { return [self] }
 
         // size > 0 and self.count >= size so self.count > 0
         assert(self.count > 0)
@@ -32,8 +42,6 @@ extension Set {
         let first = self.first!
         let tail = Set(self.dropFirst())
 
-        return Set<Set<Element>>(tail.subsets(size: size - 1).map {
-            $0.union([first])
-        } + tail.subsets(size: size))
+        return tail.subsets(size: size - 1).insertingIntoAll(first).union(tail.subsets(size: size))
     }
 }

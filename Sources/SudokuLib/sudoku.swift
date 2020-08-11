@@ -26,17 +26,17 @@ public struct Grid: Equatable {
     var cells: Array<Cell>
 
     // Indices of cells that have been constrained since the last prune
-    var newlyConstrainedCellIndices: Array<Int>
+    var newlyConstrainedCellIndices: Set<Int>
 
     public static func parseFromString(gridString: String) -> Grid {
         assert(gridString.count == 81)
 
         var cells: Array<Cell> = []
-        var newlyConstrainedCellIndices: Array<Int> = []
+        var newlyConstrainedCellIndices: Set<Int> = []
         for (index, char) in gridString.enumerated() {
             if let value = Int(String(char)).flatMap({ Grid.Cell.Value(rawValue: $0) }) {
                 cells.append(Cell(possibleValues: [value]))
-                newlyConstrainedCellIndices.append(index)
+                newlyConstrainedCellIndices.insert(index)
             } else {
                 cells.append(Cell(possibleValues: Set(Grid.Cell.Value.allCases)))
             }
@@ -82,11 +82,11 @@ public struct Grid: Equatable {
     }
 
     static func indicesVisibleFrom(index: Int) -> Set<Int> {
-        Set.union(
+        Set.union([
                 Grid.indicesInRow(rowIndex: Grid.row(of: index)),
                 Grid.indicesInColumn(columnIndex: Grid.column(of: index)),
                 Grid.indicesInBox(boxIndex: Grid.box(of: index))
-        ).subtracting([index])
+        ]).subtracting([index])
     }
 
     func allSettled() -> Bool {
@@ -115,25 +115,42 @@ public struct Grid: Equatable {
     }
 
     mutating func prune() throws {
-        // Propagate constraints for naked singles
-
-        var newlySettledCellIndices = newlyConstrainedCellIndices.filter { cells[$0].isSettled }
-
-        while let index = newlySettledCellIndices.popLast() {
-            let cell = cells[index]
-            let settledValue = cell.possibleValues.first!
-            let visibleUnsettledCellIndices = Grid.indicesVisibleFrom(index: index).filter({ !cells[$0].isSettled })
-            for visibleIndex in visibleUnsettledCellIndices {
-                cells[visibleIndex].possibleValues.remove(settledValue)
-                if cells[visibleIndex].isSettled {
-                    newlySettledCellIndices.append(visibleIndex)
-                }
-                if cells[visibleIndex].possibleValues.count == 0 {
-                    throw ConsistencyError()
+        prune: while !newlyConstrainedCellIndices.isEmpty {
+            let index = newlyConstrainedCellIndices.removeFirst()
+            // TODO: Once we have determined that a cell does not belong to, say, a double,
+            // we know it cannot belong to a double until something in one of its units is further constrained.
+            
+            // For each unit that the index belongs to
+            let units = [
+                Grid.indicesInRow(rowIndex: Grid.row(of: index)),
+                Grid.indicesInColumn(columnIndex: Grid.column(of: index)),
+                Grid.indicesInBox(boxIndex: Grid.box(of: index)),
+            ]
+            for unit in units {
+                let filteredUnit = unit.filter { !cells[$0].isSettled || $0 == index }
+                if filteredUnit.isEmpty { continue prune }
+                let minGroupSize = max(1, cells[index].possibleValues.count)
+                guard minGroupSize < filteredUnit.count else { continue prune }
+                for groupSize in minGroupSize ..< filteredUnit.count {
+                    let groupsWithIndex = filteredUnit.filter({ cells[$0].possibleValues.count <= groupSize }).subtracting([index]).subsets(size: groupSize - 1).insertingIntoAll(index)
+                    for group in groupsWithIndex {
+                        let possibleGroupValues = group.map { cells[$0].possibleValues }.reduce(Set(), { $0.union($1) })
+                        guard possibleGroupValues.count >= groupSize else { throw ConsistencyError() }
+                        if possibleGroupValues.count == groupSize {
+                            let commonVisible = Set.intersection(Set(group.map { Grid.indicesVisibleFrom(index: $0) }))
+                            for visibleIndex in commonVisible {
+                                if !cells[visibleIndex].possibleValues.intersection(possibleGroupValues).isEmpty {
+                                    cells[visibleIndex].possibleValues.subtract(possibleGroupValues)
+                                    newlyConstrainedCellIndices.insert(visibleIndex)
+                                }
+                            }
+                            continue prune
+                        }
+                    }
                 }
             }
         }
-        newlyConstrainedCellIndices = []
+        printGrid()
     }
 
     mutating public func solve() throws {
@@ -146,7 +163,7 @@ public struct Grid: Equatable {
         for value in cell.possibleValues {
             var possibleGrid = self
             possibleGrid.cells[index].possibleValues = [value]
-            possibleGrid.newlyConstrainedCellIndices.append(index)
+            possibleGrid.newlyConstrainedCellIndices.insert(index)
             do {
                 try possibleGrid.solve()
                 self = possibleGrid
@@ -188,6 +205,3 @@ public struct Grid: Equatable {
         }
     }
 }
-
-
-// TODO: Define a pruning stage which finds doubles
