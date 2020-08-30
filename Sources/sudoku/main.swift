@@ -8,13 +8,21 @@
 import Foundation
 import SudokuLib
 
-func solve(grid: SudokuLib.Grid) {
+func solve(grid: Grid) {
     var grid = grid
     grid.printGrid()
-    try! grid.solve()
+    try! grid.solve(logger: Logger(verbosity: .verbose))
     grid.printGrid()
 }
 
-for grid in SudokuLib.exampleGrids {
+let start = DispatchTime.now()
+
+for grid in exampleGrids {
     solve(grid: grid)
 }
+
+let end = DispatchTime.now()
+let nanoTime = end.uptimeNanoseconds - start.uptimeNanoseconds
+let timeInterval = Double(nanoTime) / 1_000_000_000
+
+print("Finished in \(timeInterval) seconds")
