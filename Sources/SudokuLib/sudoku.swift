@@ -172,7 +172,7 @@ public struct Grid: Equatable {
                         let possibleGroupValues = group.map { cells[$0].possibleValues }.reduce(Set(), { $0.union($1) })
                         guard possibleGroupValues.count >= groupSize else { throw ConsistencyError() }
                         if possibleGroupValues.count == groupSize {
-                            logger.log("Found that cells [\(group.map { String($0) }.joined(separator: ", "))] must contain digits [\(possibleGroupValues.map { String($0.rawValue) }.joined(separator: ", "))]")
+                            logger.log("Deduced that cells [\(group.map { String($0) }.joined(separator: ", "))] must contain digits [\(possibleGroupValues.map { String($0.rawValue) }.joined(separator: ", "))]")
                             let commonVisible = Set.intersection(Set(group.map { Grid.indicesVisibleFrom(index: $0) }))
                             for visibleIndex in commonVisible {
                                 if !cells[visibleIndex].possibleValues.intersection(possibleGroupValues).isEmpty {
@@ -194,7 +194,7 @@ public struct Grid: Equatable {
     /// Assumes there is no more than one solution.
     ///
     /// - Throws: ConsistencyError If the grid cannot be solved.
-    mutating public func solve(logger: Logger = Logger(verbosity: .silent, indentLevel: 0)) throws {
+    mutating public func solve(logger: Logger = Logger(verbose: false)) throws {
         try prune(logger: logger)
         if try isSolved() {
             return
