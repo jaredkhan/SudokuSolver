@@ -216,7 +216,6 @@ public struct Grid: Equatable {
             }
         }
         throw ConsistencyError()
-        printGrid()
     }
 
     /// Print the grid using Unicode box-drawing characters.
