@@ -14,10 +14,10 @@ final class helpersTests: XCTestCase {
 
     func testSubsets() {
         let input = Set([1, 2, 3, 4])
-        XCTAssertEqual(input.subsets(size: 3), [[1, 2, 3], [1, 2, 4], [1, 3, 4], [2, 3, 4]])
-        XCTAssertEqual(input.subsets(size: -1), [])
-        XCTAssertEqual(input.subsets(size: 0), [[]])
-        XCTAssertEqual(input.subsets(size: 4), [[1, 2, 3, 4]])
+        XCTAssertEqual(input.subsets(ofSize: 3), [[1, 2, 3], [1, 2, 4], [1, 3, 4], [2, 3, 4]])
+        XCTAssertEqual(input.subsets(ofSize: -1), [])
+        XCTAssertEqual(input.subsets(ofSize: 0), [[]])
+        XCTAssertEqual(input.subsets(ofSize: 4), [[1, 2, 3, 4]])
     }
 
     func testInsertIntoAll() {

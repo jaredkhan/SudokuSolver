@@ -33,8 +33,13 @@ extension Set {
         Self(map { $0.union([elementToAdd]) })
     }
 
+    /// Inserts the given elements into all sets in a set of sets.
+    func insertingIntoAll<InnerElement>(_ elementsToAdd: Set<InnerElement>) -> Self where Element == Set<InnerElement> {
+        Set(self.map { $0.union(elementsToAdd) })
+    }
+
     /// Gets all subsets of self which are of the given size.
-    func subsets(size: Int) -> Set<Self> {
+    func subsets(ofSize size: Int) -> Set<Set<Element>> {
         guard (0...count).contains(size) else { return [] }
 
         if size == 0 { return [[]] }
@@ -46,6 +51,12 @@ extension Set {
         let first = self.first!
         let tail = Set(self.dropFirst())
 
-        return tail.subsets(size: size - 1).insertingIntoAll(first).union(tail.subsets(size: size))
+        return tail.subsets(ofSize: size - 1).insertingIntoAll(first).union(tail.subsets(ofSize: size))
+    }
+
+    /// Gets all subsets of self which are of the given size and contain the given subset.
+    func subsets(ofSize size: Int, containing subset: Set<Element>) -> Set<Set<Element>> {
+        guard subset.isSubset(of: self) else { return [] }
+        return (self.subtracting(subset)).subsets(ofSize: size - subset.count).insertingIntoAll(subset)
     }
 }
